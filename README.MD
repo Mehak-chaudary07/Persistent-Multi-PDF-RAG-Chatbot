@@ -57,7 +57,7 @@ cd Persistent-Multi-PDF-RAG-Chatbot
 ```
 
 
-### 4. Setup API Key
+### 3. Setup API Key
 
 - Create a `.env` file in the root project folder.
 - Copy the contents of `.env.example` into `.env`.
