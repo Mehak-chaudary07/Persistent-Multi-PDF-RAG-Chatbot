@@ -1,22 +1,22 @@
-import uuid  #Universally Unique Identifier.(it basically used for creating unique ids)
-import streamlit as st #Import Streamlit to build the interactive web application.
-from pathlib import Path #it handles the path of files and folders(Path to create and manage file and directory paths.)
-import warnings  #warnings to control warning messages displayed by Python.
-import json #JavaScript Object Notation.JSON to store and retrieve PDF indexing information.(structured data)
-from dotenv import load_dotenv #load_dotenv to load environment variables from the .env file.
+import uuid 
+import streamlit as st 
+from pathlib import Path 
+import warnings  
+import json 
+from dotenv import load_dotenv 
 load_dotenv()
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage #classes to structure conversation between user and ai model
-from langchain_core.documents import Document #document is a structured object it have two imp attribute page_content and metadata
-from langchain_google_genai import (ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings)  #they both are models
-from langchain_chroma import Chroma  #used for vector database 
-from pypdf import PdfReader   #PdfReader to read PDF files and extract their text.pdfreader is class from pypdf library
-from langchain_text_splitters import RecursiveCharacterTextSplitter #the recursive text splitter to divide documents into smaller chunks.
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.documents import Document 
+from langchain_google_genai import (ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings) 
+from langchain_chroma import Chroma  
+from pypdf import PdfReader  
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-PDF_FOLDER = Path("uploaded_pdfs") #uploaded_pdfs is a folder basically(Define the folder path where uploaded PDF files will be stored.)
+PDF_FOLDER = Path("uploaded_pdfs")
 DB_FOLDER = Path("chroma_db")
-INDEX_FILE = Path("indexed_files.json") #the JSON file path used to track indexed PDF information.
+INDEX_FILE = Path("indexed_files.json")
 
-PDF_FOLDER.mkdir(exist_ok=True) #mkdir make directory means creating a folder 
+PDF_FOLDER.mkdir(exist_ok=True) 
 DB_FOLDER.mkdir(parents=True,exist_ok=True)
 warnings.filterwarnings("ignore")
 
@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore")
 # ---------------- MODELS ----------------
 
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="gemini-embedding-2-preview") #this is a embedding model
+    model="gemini-embedding-2-preview") 
 
 model = ChatGoogleGenerativeAI(
     model="gemini-3.5-flash-lite",
@@ -34,28 +34,19 @@ model = ChatGoogleGenerativeAI(
     max_retries=2,) # this is a chat model
 
 #this function is used to  Save uploaded PDF files into the local PDF folder.
-def save_uploaded_pdfs(uploaded_files):  #uploaded_files is a parameter(here uploaded files values from down streamlit code uploaded_files=st.sidebar.....)
+def save_uploaded_pdfs(uploaded_files):  
     for file in uploaded_files:
         file_path = PDF_FOLDER / file.name
         file_data = file.getvalue() #it returns the binary content
         if not file_path.exists() or file_path.read_bytes() != file_data:
             with open(file_path, "wb") as f:
                 f.write(file_data)
-    #wb means write binary format 
-# uploaded_files = st.sidebar.file_uploader(
-#     "Upload PDF files",
-#     type=["pdf"],
-#     accept_multiple_files=True)
-
-# if uploaded_files:
-#     save_uploaded_pdfs(uploaded_files)
-
 
 # ---------------- LOAD PDF ----------------
 
-def load_pdf(pdf_path):  #Read a PDF file, extract text from each page, and return the extracted pages as Document objects.
-    reader = PdfReader(str(pdf_path)) #Create a PDF reader object to access the contents of the PDF file.
-    pages = [] #Create an empty list to store the extracted PDF pages.
+def load_pdf(pdf_path):  
+    reader = PdfReader(str(pdf_path))
+    pages = [] 
     for page_number, page in enumerate(reader.pages):
         text = page.extract_text() or ""
         pages.append(
@@ -65,23 +56,23 @@ def load_pdf(pdf_path):  #Read a PDF file, extract text from each page, and retu
                     "source": pdf_path.name,
                     "page": page_number 
                 }))
-    return pages  #page content is a actual information and meta data is additional information
+    return pages 
 
 
 # ---------------- LOAD MULTIPLE PDFs ----------------
 
 def load_multiple_pdfs(pdf_paths):
     all_pages = []
-    for pdf_path in pdf_paths: #this pdf paths from the (pdf_paths = list(PDF_FOLDER.glob("*.pdf")))
+    for pdf_path in pdf_paths: 
         pages = load_pdf(pdf_path)
         all_pages.extend(pages)
-    return all_pages  #used to add individual elemeny in another list 
+    return all_pages 
   
 
 
 # ---------------- SPLIT PAGES ----------------
 
-def split_pages(pages):  #here pages value from pages = load_pdf(pdf_path)
+def split_pages(pages): 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200
@@ -92,16 +83,16 @@ def split_pages(pages):  #here pages value from pages = load_pdf(pdf_path)
 
 # ---------------- CREATE VECTOR STORE ----------------
 
-def create_vector_store(chunks): #here chucks value from chunks = split_pages(pages)
+def create_vector_store(chunks):
     vector_store = Chroma(
         collection_name="pdf_collection",
         embedding_function=embeddings,
-        persist_directory=str(DB_FOLDER)   #persist directory basiccaly uuid is used for create new collection on every refresh
+        persist_directory=str(DB_FOLDER)   
     )
     vector_store.add_documents(chunks)
     return vector_store
 
-def load_vector_store(): #Load or connect to the existing persistent Chroma vector store.
+def load_vector_store(): 
     vector_store = Chroma(
         collection_name="pdf_collection",
         embedding_function=embeddings,
@@ -111,7 +102,7 @@ def load_vector_store(): #Load or connect to the existing persistent Chroma vect
   
 # ---------------- RETRIEVE CHUNKS ----------------
 
-def retrieve_chunks(question, selected_file): #question from st.chat_input and selected_file from st.sidebar.selectbox()
+def retrieve_chunks(question, selected_file): 
     search_kwargs = {"k": 4}
     if selected_file != "All documents":
         search_kwargs["filter"] = {
