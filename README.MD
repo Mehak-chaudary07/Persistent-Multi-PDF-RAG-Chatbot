@@ -61,4 +61,4 @@ cd Persistent-Multi-PDF-RAG-Chatbot
 
 - Create a `.env` file in the root project folder.
 - Copy the contents of `.env.example` into `.env`.
-- Get your API key from [Google AI Studio](https://aistudio.google.com/apikey
+- Get your API key from [Google AI Studio]
