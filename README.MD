@@ -56,11 +56,6 @@ git clone https://github.com/Mehak-chaudary07/Persistent-Multi-PDF-RAG-Chatbot.g
 cd Persistent-Multi-PDF-RAG-Chatbot
 ```
 
-### 3. Install Required Libraries
-
-```bash
-pip install -r requirements.txt
-```
 
 ### 4. Setup API Key
 
