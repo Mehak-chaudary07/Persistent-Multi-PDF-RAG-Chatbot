@@ -3,8 +3,8 @@ import streamlit as st #Import Streamlit to build the interactive web applicatio
 from pathlib import Path #it handles the path of files and folders(Path to create and manage file and directory paths.)
 import warnings  #warnings to control warning messages displayed by Python.
 import json #JavaScript Object Notation.JSON to store and retrieve PDF indexing information.(structured data)
-from dotenv import load_dotenv #load_dotenv to load environment variables from the .env file.
-load_dotenv()
+# from dotenv import load_dotenv #load_dotenv to load environment variables from the .env file.
+# load_dotenv()
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage #classes to structure conversation between user and ai model
 from langchain_core.documents import Document #document is a structured object it have two imp attribute page_content and metadata
 from langchain_google_genai import (ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings)  #they both are models
@@ -16,6 +16,9 @@ PDF_FOLDER = Path("uploaded_pdfs") #uploaded_pdfs is a folder basically(Define t
 DB_FOLDER = Path("chroma_db")
 INDEX_FILE = Path("indexed_files.json") #the JSON file path used to track indexed PDF information.
 
+
+GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+
 PDF_FOLDER.mkdir(exist_ok=True) #mkdir make directory means creating a folder 
 DB_FOLDER.mkdir(parents=True,exist_ok=True)
 warnings.filterwarnings("ignore")
@@ -24,14 +27,17 @@ warnings.filterwarnings("ignore")
 # ---------------- MODELS ----------------
 
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="gemini-embedding-2-preview") #this is a embedding model
+    model="gemini-embedding-2-preview",
+    api_key=GOOGLE_API_KEY) #this is a embedding model
 
 model = ChatGoogleGenerativeAI(
     model="gemini-3.5-flash-lite",
     temperature=0.2,
     max_tokens=None,
     timeout=None,
-    max_retries=2,) # this is a chat model
+    max_retries=2,
+    api_key=GOOGLE_API_KEY
+    ) # this is a chat model
 
 #this function is used to  Save uploaded PDF files into the local PDF folder.
 def save_uploaded_pdfs(uploaded_files):  #uploaded_files is a parameter(here uploaded files values from down streamlit code uploaded_files=st.sidebar.....)
