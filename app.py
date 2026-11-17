@@ -1,4 +1,4 @@
-import uuid
+
 import streamlit as st
 from pathlib import Path
 import warnings
@@ -358,21 +358,6 @@ h1, h2, h3 {
     font-weight: 700 !important;
 }
 
-/* Main title */
-
-.main-title {
-    font-size: 34px;
-    font-weight: 800;
-    color: #172B45;
-    margin-bottom: 5px;
-}
-
-.main-subtitle {
-    color: #718096;
-    font-size: 15px;
-    margin-bottom: 25px;
-}
-
 /* Header card */
 
 .hero-card {
@@ -571,15 +556,12 @@ if "messages" not in st.session_state:
 
 st.sidebar.markdown("""
 <div style="padding: 10px 0 20px 0;">
-
-    <h2 style="color:#1677C8; margin-bottom:0;">
-        📚 PDF Assistant
-    </h2>
-
-    <p style="color:#718096; font-size:13px;">
-        Your personal document chatbot
-    </p>
-
+<h2 style="color:#1677C8; margin-bottom:0;">
+📚 PDF Assistant
+</h2>
+<p style="color:#718096; font-size:13px;">
+Your personal document chatbot
+</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -608,23 +590,22 @@ if uploaded_files:
 
 pdf_paths = list(PDF_FOLDER.glob("*.pdf"))
 
+pdf_paths.sort(key=lambda path: path.name.lower())
+
 
 # Stop only if no PDF exists
 
 if not pdf_paths:
 
     st.markdown("""
-    <div class="hero-card">
-
-        <h2>Welcome to your PDF Assistant 👋</h2>
-
-        <p>
-            Upload one or more PDF documents from the sidebar
-            to start asking questions and get answers from your files.
-        </p>
-
-    </div>
-    """, unsafe_allow_html=True)
+<div class="hero-card">
+<h2>Welcome to your PDF Assistant 👋</h2>
+<p>
+Upload one or more PDF documents from the sidebar
+to start asking questions and get answers from your files.
+</p>
+</div>
+""", unsafe_allow_html=True)
 
     st.info("Please upload one or more PDF files from the sidebar.")
 
@@ -647,8 +628,6 @@ selected_file = st.sidebar.selectbox(
 #                       INDEXING
 # =====================================================
 
-# Load existing vector database
-
 vector_store = load_vector_store()
 
 
@@ -656,7 +635,7 @@ vector_store = load_vector_store()
 
 if INDEX_FILE.exists():
 
-    with open(INDEX_FILE, "r") as f:
+    with open(INDEX_FILE, "r", encoding="utf-8") as f:
 
         try:
             indexed_files = json.load(f)
@@ -664,7 +643,7 @@ if INDEX_FILE.exists():
             if not isinstance(indexed_files, dict):
                 indexed_files = {}
 
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, OSError):
             indexed_files = {}
 
 else:
@@ -690,7 +669,7 @@ with st.spinner("Checking PDF files..."):
             or saved_info.get("modified") != file_info["modified"]
         ):
 
-            # Remove old chunks if this PDF was indexed earlier
+            # Remove old chunks if PDF was indexed earlier
 
             vector_store.delete(
                 where={"source": pdf_path.name}
@@ -721,7 +700,7 @@ with st.spinner("Checking PDF files..."):
 
     # Save indexing record
 
-    with open(INDEX_FILE, "w") as f:
+    with open(INDEX_FILE, "w", encoding="utf-8") as f:
 
         json.dump(indexed_files, f, indent=4)
 
@@ -770,7 +749,6 @@ with col2:
         st.session_state.num_chunks
     )
 
-
 st.sidebar.caption(
     f"📁 {len(pdf_paths)} PDF document(s) available"
 )
@@ -784,7 +762,7 @@ st.sidebar.markdown("---")
 
 if st.sidebar.button(
     "🗑️ Clear Chat",
-    width="stretch"
+    use_container_width=True
 ):
 
     st.session_state.messages = []
@@ -798,14 +776,11 @@ if st.sidebar.button(
 
 st.markdown("""
 <div class="hero-card">
-
-    <h2>📚 Multiple PDF RAG Chatbot</h2>
-
-    <p>
-        Ask questions from your uploaded PDF documents.
-        Get context-based answers with document references and page numbers.
-    </p>
-
+<h2>📚 Multiple PDF RAG Chatbot</h2>
+<p>
+Ask questions from your uploaded PDF documents.
+Get context-based answers with document references and page numbers.
+</p>
 </div>
 """, unsafe_allow_html=True)
 
