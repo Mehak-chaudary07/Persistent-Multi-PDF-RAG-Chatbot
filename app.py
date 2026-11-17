@@ -28,16 +28,15 @@ warnings.filterwarnings("ignore")
 
 embeddings = GoogleGenerativeAIEmbeddings(
     model="gemini-embedding-2",
-    api_key=GOOGLE_API_KEY) #this is a embedding model
+    google_api_key=GOOGLE_API_KEY
+)
 
 model = ChatGoogleGenerativeAI(
     model="gemini-3.5-flash-lite",
     temperature=0.2,
-    max_tokens=None,
-    timeout=None,
     max_retries=2,
-    api_key=GOOGLE_API_KEY
-    ) # this is a chat model
+    google_api_key=GOOGLE_API_KEY
+)
 
 #this function is used to  Save uploaded PDF files into the local PDF folder.
 def save_uploaded_pdfs(uploaded_files):  #uploaded_files is a parameter(here uploaded files values from down streamlit code uploaded_files=st.sidebar.....)
@@ -104,8 +103,15 @@ def create_vector_store(chunks): #here chucks value from chunks = split_pages(pa
         embedding_function=embeddings,
         persist_directory=str(DB_FOLDER)   #persist directory basiccaly uuid is used for create new collection on every refresh
     )
-    vector_store.add_documents(chunks)
-    return vector_store
+    if chunks:
+    try:
+        vector_store.add_documents(chunks)
+
+    except Exception as e:
+        print("EMBEDDING ERROR:", repr(e))
+        st.error("Error occurred while generating embeddings.")
+        st.exception(e)
+        raise
 
 def load_vector_store(): #Load or connect to the existing persistent Chroma vector store.
     vector_store = Chroma(
