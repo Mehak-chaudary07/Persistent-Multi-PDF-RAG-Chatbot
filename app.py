@@ -1,4 +1,4 @@
-import uuid  # Universally Unique Identifier
+import uuid
 import streamlit as st
 from pathlib import Path
 import warnings
@@ -15,19 +15,36 @@ from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
+# =====================================================
+#                  PAGE CONFIGURATION
+# =====================================================
+
+st.set_page_config(
+    page_title="Multiple PDF RAG",
+    page_icon="📚",
+    layout="wide"
+)
+
+
+# =====================================================
+#                  FILE PATHS
+# =====================================================
+
 PDF_FOLDER = Path("uploaded_pdfs")
 DB_FOLDER = Path("chroma_db")
 INDEX_FILE = Path("indexed_files.json")
 
+PDF_FOLDER.mkdir(exist_ok=True)
+DB_FOLDER.mkdir(parents=True, exist_ok=True)
+
+warnings.filterwarnings("ignore")
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 
-PDF_FOLDER.mkdir(exist_ok=True)
-DB_FOLDER.mkdir(parents=True, exist_ok=True)
-warnings.filterwarnings("ignore")
 
-
-# ---------------- MODELS ----------------
+# =====================================================
+#                       MODELS
+# =====================================================
 
 embeddings = GoogleGenerativeAIEmbeddings(
     model="gemini-embedding-2",
@@ -42,25 +59,34 @@ model = ChatGoogleGenerativeAI(
 )
 
 
-# ---------------- SAVE UPLOADED PDFs ----------------
+# =====================================================
+#                 SAVE UPLOADED PDFs
+# =====================================================
 
 def save_uploaded_pdfs(uploaded_files):
+
     for file in uploaded_files:
+
         file_path = PDF_FOLDER / file.name
         file_data = file.getvalue()
 
         if not file_path.exists() or file_path.read_bytes() != file_data:
+
             with open(file_path, "wb") as f:
                 f.write(file_data)
 
 
-# ---------------- LOAD PDF ----------------
+# =====================================================
+#                      LOAD PDF
+# =====================================================
 
 def load_pdf(pdf_path):
+
     reader = PdfReader(str(pdf_path))
     pages = []
 
     for page_number, page in enumerate(reader.pages):
+
         text = page.extract_text() or ""
 
         pages.append(
@@ -76,33 +102,44 @@ def load_pdf(pdf_path):
     return pages
 
 
-# ---------------- LOAD MULTIPLE PDFs ----------------
+# =====================================================
+#                 LOAD MULTIPLE PDFs
+# =====================================================
 
 def load_multiple_pdfs(pdf_paths):
+
     all_pages = []
 
     for pdf_path in pdf_paths:
+
         pages = load_pdf(pdf_path)
         all_pages.extend(pages)
 
     return all_pages
 
 
-# ---------------- SPLIT PAGES ----------------
+# =====================================================
+#                    SPLIT PAGES
+# =====================================================
 
 def split_pages(pages):
+
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200
     )
 
     chunks = splitter.split_documents(pages)
+
     return chunks
 
 
-# ---------------- CREATE VECTOR STORE ----------------
+# =====================================================
+#                 CREATE VECTOR STORE
+# =====================================================
 
 def create_vector_store(chunks):
+
     vector_store = Chroma(
         collection_name="pdf_collection",
         embedding_function=embeddings,
@@ -110,10 +147,12 @@ def create_vector_store(chunks):
     )
 
     vector_store.add_documents(chunks)
+
     return vector_store
 
 
 def load_vector_store():
+
     vector_store = Chroma(
         collection_name="pdf_collection",
         embedding_function=embeddings,
@@ -123,12 +162,16 @@ def load_vector_store():
     return vector_store
 
 
-# ---------------- RETRIEVE CHUNKS ----------------
+# =====================================================
+#                   RETRIEVE CHUNKS
+# =====================================================
 
 def retrieve_chunks(question, selected_file):
+
     search_kwargs = {"k": 4}
 
     if selected_file != "All documents":
+
         search_kwargs["filter"] = {
             "source": selected_file
         }
@@ -140,7 +183,9 @@ def retrieve_chunks(question, selected_file):
     return retriever.invoke(question)
 
 
-# ---------------- SYSTEM PROMPT ----------------
+# =====================================================
+#                    SYSTEM PROMPT
+# =====================================================
 
 SYSTEM_PROMPT = """
 You are a helpful assistant that answers questions about uploaded PDF documents.
@@ -155,12 +200,16 @@ Rules:
 """
 
 
-# ---------------- FORMAT CONTEXT ----------------
+# =====================================================
+#                  FORMAT CONTEXT
+# =====================================================
 
 def format_context(docs):
+
     parts = []
 
     for i, doc in enumerate(docs, start=1):
+
         source = doc.metadata.get("source", "Unknown")
         page = doc.metadata.get("page", 0) + 1
 
@@ -174,12 +223,16 @@ def format_context(docs):
     return "\n\n".join(parts)
 
 
-# ---------------- BUILD SOURCES ----------------
+# =====================================================
+#                   BUILD SOURCES
+# =====================================================
 
 def build_sources(docs):
+
     sources = []
 
     for i, doc in enumerate(docs, start=1):
+
         sources.append({
             "id": i,
             "file": doc.metadata.get("source", "Unknown"),
@@ -190,21 +243,30 @@ def build_sources(docs):
     return sources
 
 
-# ---------------- SHOW SOURCES ----------------
+# =====================================================
+#                    SHOW SOURCES
+# =====================================================
 
 def show_sources(sources):
+
     with st.expander("📚 View Sources"):
+
         for source in sources:
+
             st.markdown(
                 f"**[{source['id']}] {source['file']} "
                 f"- Page {source['page']}**"
             )
+
             st.caption(source["text"])
 
 
-# ---------------- ASK MODEL ----------------
+# =====================================================
+#                    ASK MODEL
+# =====================================================
 
 def ask_model(question, docs, history):
+
     context = format_context(docs)
 
     messages = [
@@ -214,12 +276,15 @@ def ask_model(question, docs, history):
     ]
 
     for message in history:
+
         if message["role"] == "user":
+
             messages.append(
                 HumanMessage(content=message["content"])
             )
 
         elif message["role"] == "assistant":
+
             messages.append(
                 AIMessage(content=message["content"])
             )
@@ -231,9 +296,11 @@ def ask_model(question, docs, history):
     response = model.invoke(messages)
 
     if isinstance(response.content, str):
+
         return response.content
 
     if isinstance(response.content, list):
+
         return "\n".join(
             block["text"]
             for block in response.content
@@ -244,17 +311,8 @@ def ask_model(question, docs, history):
 
 
 # =====================================================
-#                    STREAMLIT UI
+#                 WHITE + BLUE THEME
 # =====================================================
-
-st.set_page_config(
-    page_title="Multiple PDF RAG",
-    page_icon="📚",
-    layout="wide"
-)
-
-
-# ---------------- CUSTOM BLACK + BLUE THEME ----------------
 
 st.markdown("""
 <style>
@@ -262,8 +320,8 @@ st.markdown("""
 /* Main application background */
 
 .stApp {
-    background-color: #080D14;
-    color: #E6EDF6;
+    background-color: #F5F8FC;
+    color: #263445;
 }
 
 /* Main content area */
@@ -277,12 +335,12 @@ st.markdown("""
 /* Sidebar */
 
 [data-testid="stSidebar"] {
-    background-color: #0D1520;
-    border-right: 1px solid #1B3042;
+    background-color: #FFFFFF;
+    border-right: 1px solid #DCE5EF;
 }
 
 [data-testid="stSidebar"] > div:first-child {
-    background-color: #0D1520;
+    background-color: #FFFFFF;
 }
 
 /* Sidebar text */
@@ -290,13 +348,13 @@ st.markdown("""
 [data-testid="stSidebar"] p,
 [data-testid="stSidebar"] label,
 [data-testid="stSidebar"] span {
-    color: #D5E2EF;
+    color: #34465A;
 }
 
 /* Main headings */
 
 h1, h2, h3 {
-    color: #EAF6FF !important;
+    color: #172B45 !important;
     font-weight: 700 !important;
 }
 
@@ -305,12 +363,12 @@ h1, h2, h3 {
 .main-title {
     font-size: 34px;
     font-weight: 800;
-    color: #EAF6FF;
+    color: #172B45;
     margin-bottom: 5px;
 }
 
 .main-subtitle {
-    color: #8DA5BA;
+    color: #718096;
     font-size: 15px;
     margin-bottom: 25px;
 }
@@ -320,24 +378,24 @@ h1, h2, h3 {
 .hero-card {
     background: linear-gradient(
         120deg,
-        #102638,
-        #10202F,
-        #111A27
+        #EAF4FF,
+        #F3F8FF,
+        #FFFFFF
     );
-    border: 1px solid #1D4B66;
+    border: 1px solid #C9DDF2;
     border-radius: 16px;
     padding: 25px;
     margin-bottom: 25px;
 }
 
 .hero-card h2 {
-    color: #E8F7FF;
+    color: #173B66 !important;
     margin-bottom: 8px;
     font-size: 25px;
 }
 
 .hero-card p {
-    color: #A8C3D7;
+    color: #61758B;
     font-size: 14px;
     margin-bottom: 0;
 }
@@ -346,7 +404,7 @@ h1, h2, h3 {
 
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3 {
-    color: #48C8E8 !important;
+    color: #1673B8 !important;
 }
 
 /* Buttons */
@@ -354,11 +412,11 @@ h1, h2, h3 {
 .stButton > button {
     background: linear-gradient(
         120deg,
-        #087E9B,
-        #126DAB
+        #1677C8,
+        #1265A8
     );
-    color: white;
-    border: 1px solid #249CC0;
+    color: #FFFFFF;
+    border: 1px solid #1677C8;
     border-radius: 9px;
     font-weight: 600;
     padding: 9px 18px;
@@ -368,18 +426,18 @@ h1, h2, h3 {
 .stButton > button:hover {
     background: linear-gradient(
         120deg,
-        #0799B8,
-        #1688CB
+        #0D8AE0,
+        #1677C8
     );
-    border: 1px solid #54D8F2;
-    color: white;
+    border: 1px solid #0D8AE0;
+    color: #FFFFFF;
 }
 
 /* File uploader */
 
 [data-testid="stFileUploader"] {
-    background-color: #111D2A;
-    border: 1px dashed #27617D;
+    background-color: #F7FAFE;
+    border: 1px dashed #91BCE0;
     border-radius: 12px;
     padding: 12px;
 }
@@ -387,34 +445,34 @@ h1, h2, h3 {
 /* Select box */
 
 [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-    background-color: #142333;
-    border: 1px solid #28536D;
-    color: #E6F5FF;
+    background-color: #FFFFFF;
+    border: 1px solid #C8D7E7;
+    color: #263445;
     border-radius: 9px;
 }
 
 /* Metrics */
 
 [data-testid="stMetric"] {
-    background-color: #111D2A;
-    border: 1px solid #1D4058;
+    background-color: #FFFFFF;
+    border: 1px solid #DCE6F0;
     border-radius: 12px;
     padding: 15px;
 }
 
 [data-testid="stMetricLabel"] {
-    color: #93B3C9 !important;
+    color: #718096 !important;
 }
 
 [data-testid="stMetricValue"] {
-    color: #55D5F2 !important;
+    color: #1677C8 !important;
 }
 
 /* Chat messages */
 
 [data-testid="stChatMessage"] {
-    background-color: #111C29;
-    border: 1px solid #1D3549;
+    background-color: #FFFFFF;
+    border: 1px solid #DCE5EF;
     border-radius: 14px;
     padding: 15px;
     margin-bottom: 12px;
@@ -423,47 +481,56 @@ h1, h2, h3 {
 /* Chat input */
 
 [data-testid="stChatInput"] {
-    background-color: #101B28;
-    border: 1px solid #28536D;
+    background-color: #FFFFFF;
+    border: 1px solid #B9CEE3;
     border-radius: 12px;
 }
 
 [data-testid="stChatInput"] textarea {
-    color: #EAF6FF !important;
+    color: #263445 !important;
 }
 
 /* Expander / Sources */
 
 [data-testid="stExpander"] {
-    background-color: #111D2A;
-    border: 1px solid #24516B;
+    background-color: #FFFFFF;
+    border: 1px solid #D4E1EE;
     border-radius: 10px;
     margin-top: 10px;
 }
 
 [data-testid="stExpander"] summary {
-    color: #59D5F0;
+    color: #1677C8;
 }
 
 /* Divider */
 
 hr {
-    border-color: #20394C;
+    border-color: #DCE5EF;
 }
 
 /* Caption */
 
 .stCaption {
-    color: #8DA8BD !important;
+    color: #718096 !important;
 }
 
 /* Info messages */
 
 [data-testid="stAlert"] {
-    background-color: #102638;
-    border: 1px solid #24617C;
-    color: #D9F3FF;
+    background-color: #EDF6FF;
+    border: 1px solid #C5DDF4;
+    color: #24496D;
     border-radius: 10px;
+}
+
+/* Input fields */
+
+.stTextInput input,
+.stTextArea textarea {
+    background-color: #FFFFFF;
+    color: #263445;
+    border: 1px solid #C8D7E7;
 }
 
 /* Scrollbar */
@@ -473,40 +540,49 @@ hr {
 }
 
 ::-webkit-scrollbar-track {
-    background: #080D14;
+    background: #F5F8FC;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #24516B;
+    background: #B8CDE0;
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #1688AA;
+    background: #1677C8;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 
-# ---------------- INITIALIZE CHAT HISTORY ----------------
+# =====================================================
+#                INITIALIZE CHAT HISTORY
+# =====================================================
 
 if "messages" not in st.session_state:
+
     st.session_state.messages = []
 
 
-# ---------------- SIDEBAR ----------------
+# =====================================================
+#                       SIDEBAR
+# =====================================================
 
 st.sidebar.markdown("""
 <div style="padding: 10px 0 20px 0;">
-    <h2 style="color:#50D5F2; margin-bottom:0;">
+
+    <h2 style="color:#1677C8; margin-bottom:0;">
         📚 PDF Assistant
     </h2>
-    <p style="color:#8DA8BD; font-size:13px;">
+
+    <p style="color:#718096; font-size:13px;">
         Your personal document chatbot
     </p>
+
 </div>
 """, unsafe_allow_html=True)
+
 
 st.sidebar.header("Upload Documents")
 
@@ -517,13 +593,18 @@ uploaded_files = st.sidebar.file_uploader(
 )
 
 
-# Save newly uploaded PDFs
+# =====================================================
+#                 SAVE UPLOADED PDFs
+# =====================================================
 
 if uploaded_files:
+
     save_uploaded_pdfs(uploaded_files)
 
 
-# Get all saved PDF files
+# =====================================================
+#                 GET SAVED PDF FILES
+# =====================================================
 
 pdf_paths = list(PDF_FOLDER.glob("*.pdf"))
 
@@ -531,21 +612,28 @@ pdf_paths = list(PDF_FOLDER.glob("*.pdf"))
 # Stop only if no PDF exists
 
 if not pdf_paths:
+
     st.markdown("""
     <div class="hero-card">
+
         <h2>Welcome to your PDF Assistant 👋</h2>
+
         <p>
             Upload one or more PDF documents from the sidebar
             to start asking questions and get answers from your files.
         </p>
+
     </div>
     """, unsafe_allow_html=True)
 
     st.info("Please upload one or more PDF files from the sidebar.")
+
     st.stop()
 
 
-# ---------------- FILE SELECTION ----------------
+# =====================================================
+#                    FILE SELECTION
+# =====================================================
 
 file_names = [pdf.name for pdf in pdf_paths]
 
@@ -555,7 +643,9 @@ selected_file = st.sidebar.selectbox(
 )
 
 
-# ---------------- INDEXING ----------------
+# =====================================================
+#                       INDEXING
+# =====================================================
 
 # Load existing vector database
 
@@ -565,12 +655,20 @@ vector_store = load_vector_store()
 # Load indexed files record
 
 if INDEX_FILE.exists():
+
     with open(INDEX_FILE, "r") as f:
+
         try:
             indexed_files = json.load(f)
+
+            if not isinstance(indexed_files, dict):
+                indexed_files = {}
+
         except json.JSONDecodeError:
             indexed_files = {}
+
 else:
+
     indexed_files = {}
 
 
@@ -587,8 +685,10 @@ with st.spinner("Checking PDF files..."):
 
         saved_info = indexed_files.get(pdf_path.name, {})
 
-        if saved_info.get("size") != file_info["size"] or \
-           saved_info.get("modified") != file_info["modified"]:
+        if (
+            saved_info.get("size") != file_info["size"]
+            or saved_info.get("modified") != file_info["modified"]
+        ):
 
             # Remove old chunks if this PDF was indexed earlier
 
@@ -607,6 +707,7 @@ with st.spinner("Checking PDF files..."):
             # Add new chunks to database
 
             if chunks:
+
                 vector_store.add_documents(chunks)
 
             # Update record
@@ -621,75 +722,97 @@ with st.spinner("Checking PDF files..."):
     # Save indexing record
 
     with open(INDEX_FILE, "w") as f:
+
         json.dump(indexed_files, f, indent=4)
 
 
-# Store vector database in session
+# =====================================================
+#               STORE VECTOR DATABASE
+# =====================================================
 
 st.session_state.vector_store = vector_store
 
 
-# Calculate total pages from PDFs
+# =====================================================
+#               DOCUMENT STATISTICS
+# =====================================================
 
 st.session_state.num_pages = sum(
     indexed_files[p.name]["pages"] for p in pdf_paths
 )
-
-
-# Calculate total chunks from PDFs
 
 st.session_state.num_chunks = sum(
     indexed_files[p.name]["chunks"] for p in pdf_paths
 )
 
 
-# ---------------- DOCUMENT INFORMATION ----------------
+# =====================================================
+#               SIDEBAR STATISTICS
+# =====================================================
 
 st.sidebar.markdown("---")
+
 st.sidebar.subheader("📊 Document Statistics")
 
 col1, col2 = st.sidebar.columns(2)
 
 with col1:
+
     st.metric(
         "Pages",
         st.session_state.num_pages
     )
 
 with col2:
+
     st.metric(
         "Chunks",
         st.session_state.num_chunks
     )
+
 
 st.sidebar.caption(
     f"📁 {len(pdf_paths)} PDF document(s) available"
 )
 
 
-# ---------------- CLEAR CHAT ----------------
+# =====================================================
+#                     CLEAR CHAT
+# =====================================================
 
 st.sidebar.markdown("---")
 
-if st.sidebar.button("🗑️ Clear Chat", use_container_width=True):
+if st.sidebar.button(
+    "🗑️ Clear Chat",
+    width="stretch"
+):
+
     st.session_state.messages = []
+
     st.rerun()
 
 
-# ---------------- MAIN HEADER ----------------
+# =====================================================
+#                    MAIN HEADER
+# =====================================================
 
 st.markdown("""
 <div class="hero-card">
+
     <h2>📚 Multiple PDF RAG Chatbot</h2>
+
     <p>
         Ask questions from your uploaded PDF documents.
         Get context-based answers with document references and page numbers.
     </p>
+
 </div>
 """, unsafe_allow_html=True)
 
 
-# ---------------- DISPLAY CHAT HISTORY ----------------
+# =====================================================
+#                 DISPLAY CHAT HISTORY
+# =====================================================
 
 for message in st.session_state.messages:
 
@@ -698,28 +821,43 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
         if message.get("sources"):
+
             show_sources(message["sources"])
 
 
-# ---------------- ASK QUESTION ----------------
+# =====================================================
+#                    ASK QUESTION
+# =====================================================
 
 question = st.chat_input(
     "Ask anything about your uploaded PDFs..."
 )
 
+
 if question:
 
+    # Display user question
+
     with st.chat_message("user"):
+
         st.markdown(question)
 
-    docs = retrieve_chunks(question, selected_file)
+    # Retrieve relevant chunks
+
+    docs = retrieve_chunks(
+        question,
+        selected_file
+    )
 
     if not docs:
 
         answer = "I could not find this in the selected documents."
+
         sources = []
 
     else:
+
+        # Generate answer
 
         with st.spinner("Generating answer..."):
 
@@ -731,17 +869,24 @@ if question:
 
             sources = build_sources(docs)
 
+    # Display assistant answer
+
     with st.chat_message("assistant"):
 
         st.markdown(answer)
 
         if sources:
+
             show_sources(sources)
+
+    # Save user message
 
     st.session_state.messages.append({
         "role": "user",
         "content": question
     })
+
+    # Save assistant message
 
     st.session_state.messages.append({
         "role": "assistant",
