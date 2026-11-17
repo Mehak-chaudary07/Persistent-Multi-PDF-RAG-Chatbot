@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore")
 # ---------------- MODELS ----------------
 
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="gemini-embedding-2-preview",
+    model="gemini-embedding-2",
     api_key=GOOGLE_API_KEY) #this is a embedding model
 
 model = ChatGoogleGenerativeAI(
