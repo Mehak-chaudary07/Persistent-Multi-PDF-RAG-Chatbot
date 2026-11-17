@@ -1,4 +1,4 @@
-Persistent Multi-PDF RAG Chatbot
+# Persistent Multi-PDF RAG Chatbot
 
 An AI-powered Multi-PDF RAG Chatbot built using Python, Streamlit, LangChain, Google Gemini and ChromaDB.
 
