@@ -311,20 +311,20 @@ def ask_model(question, docs, history):
 
 
 # =====================================================
-#                 WHITE + BLUE THEME
+#                  SAGE GREEN THEME
 # =====================================================
 
 st.markdown("""
 <style>
 
-/* Main application background */
+/* Main background */
 
 .stApp {
-    background-color: #F5F8FC;
-    color: #263445;
+    background-color: #F5F7F2;
+    color: #263B32;
 }
 
-/* Main content area */
+/* Main content */
 
 .main .block-container {
     padding-top: 2rem;
@@ -335,12 +335,12 @@ st.markdown("""
 /* Sidebar */
 
 [data-testid="stSidebar"] {
-    background-color: #FFFFFF;
-    border-right: 1px solid #DCE5EF;
+    background-color: #263B32;
+    border-right: 1px solid #354D40;
 }
 
 [data-testid="stSidebar"] > div:first-child {
-    background-color: #FFFFFF;
+    background-color: #263B32;
 }
 
 /* Sidebar text */
@@ -348,60 +348,87 @@ st.markdown("""
 [data-testid="stSidebar"] p,
 [data-testid="stSidebar"] label,
 [data-testid="stSidebar"] span {
-    color: #34465A;
+    color: #EAF0E9;
+}
+
+/* Sidebar headings */
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    color: #FFFFFF !important;
 }
 
 /* Main headings */
 
 h1, h2, h3 {
-    color: #172B45 !important;
+    color: #263B32 !important;
     font-weight: 700 !important;
 }
 
-/* Header card */
+/* Hero header */
 
 .hero-card {
     background: linear-gradient(
         120deg,
-        #EAF4FF,
-        #F3F8FF,
+        #E1EAE0,
+        #F0F4ED,
         #FFFFFF
     );
-    border: 1px solid #C9DDF2;
+    border: 1px solid #CAD9CA;
     border-radius: 16px;
-    padding: 25px;
-    margin-bottom: 25px;
+    padding: 28px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(38, 59, 50, 0.04);
 }
 
 .hero-card h2 {
-    color: #173B66 !important;
-    margin-bottom: 8px;
-    font-size: 25px;
+    color: #294C3B !important;
+    margin-bottom: 10px;
+    font-size: 28px;
 }
 
 .hero-card p {
-    color: #61758B;
-    font-size: 14px;
+    color: #63786B;
+    font-size: 15px;
     margin-bottom: 0;
 }
 
-/* Sidebar headings */
+/* Sidebar branding */
 
-[data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3 {
-    color: #1673B8 !important;
+.sidebar-brand {
+    text-align: center;
+    padding: 18px 5px 25px 5px;
+}
+
+.sidebar-brand .logo {
+    font-size: 43px;
+    margin-bottom: 5px;
+}
+
+.sidebar-brand h2 {
+    color: #FFFFFF !important;
+    font-size: 23px;
+    margin-bottom: 6px;
+}
+
+.sidebar-brand p {
+    color: #C4D2C6 !important;
+    font-size: 13px;
+}
+
+/* Sidebar divider */
+
+[data-testid="stSidebar"] hr {
+    border-color: #52685A;
 }
 
 /* Buttons */
 
 .stButton > button {
-    background: linear-gradient(
-        120deg,
-        #1677C8,
-        #1265A8
-    );
+    background-color: #789B83;
     color: #FFFFFF;
-    border: 1px solid #1677C8;
+    border: 1px solid #789B83;
     border-radius: 9px;
     font-weight: 600;
     padding: 9px 18px;
@@ -409,103 +436,132 @@ h1, h2, h3 {
 }
 
 .stButton > button:hover {
-    background: linear-gradient(
-        120deg,
-        #0D8AE0,
-        #1677C8
-    );
-    border: 1px solid #0D8AE0;
+    background-color: #5F826B;
+    border-color: #5F826B;
+    color: #FFFFFF;
+}
+
+/* Sidebar buttons */
+
+[data-testid="stSidebar"] .stButton > button {
+    background-color: #789B83;
+    border-color: #789B83;
     color: #FFFFFF;
 }
 
 /* File uploader */
 
 [data-testid="stFileUploader"] {
-    background-color: #F7FAFE;
-    border: 1px dashed #91BCE0;
+    background-color: #F0F4ED;
+    border: 1px dashed #91AB96;
     border-radius: 12px;
     padding: 12px;
+}
+
+/* Sidebar uploader text */
+
+[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+    background-color: #344D40;
+    border: 1px dashed #8DA994;
 }
 
 /* Select box */
 
 [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
     background-color: #FFFFFF;
-    border: 1px solid #C8D7E7;
-    color: #263445;
+    border: 1px solid #C9D8CA;
+    color: #263B32;
     border-radius: 9px;
+}
+
+/* Sidebar select box */
+
+[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    background-color: #354D40;
+    border: 1px solid #718B77;
+    color: #FFFFFF;
+}
+
+/* Dropdown options */
+
+[data-baseweb="popover"] ul {
+    background-color: #FFFFFF;
+}
+
+[data-baseweb="menu"] {
+    background-color: #FFFFFF;
 }
 
 /* Metrics */
 
 [data-testid="stMetric"] {
     background-color: #FFFFFF;
-    border: 1px solid #DCE6F0;
+    border: 1px solid #DCE6DC;
     border-radius: 12px;
-    padding: 15px;
+    padding: 13px;
 }
 
 [data-testid="stMetricLabel"] {
-    color: #718096 !important;
+    color: #718276 !important;
 }
 
 [data-testid="stMetricValue"] {
-    color: #1677C8 !important;
+    color: #557D62 !important;
 }
 
 /* Chat messages */
 
 [data-testid="stChatMessage"] {
     background-color: #FFFFFF;
-    border: 1px solid #DCE5EF;
+    border: 1px solid #DFE7DD;
     border-radius: 14px;
     padding: 15px;
-    margin-bottom: 12px;
+    margin-bottom: 13px;
 }
 
 /* Chat input */
 
 [data-testid="stChatInput"] {
     background-color: #FFFFFF;
-    border: 1px solid #B9CEE3;
+    border: 1px solid #B8CCBA;
     border-radius: 12px;
 }
 
 [data-testid="stChatInput"] textarea {
-    color: #263445 !important;
+    color: #263B32 !important;
 }
 
 /* Expander / Sources */
 
 [data-testid="stExpander"] {
     background-color: #FFFFFF;
-    border: 1px solid #D4E1EE;
+    border: 1px solid #D6E2D6;
     border-radius: 10px;
     margin-top: 10px;
 }
 
 [data-testid="stExpander"] summary {
-    color: #1677C8;
+    color: #557D62;
 }
 
 /* Divider */
 
 hr {
-    border-color: #DCE5EF;
+    border-color: #DCE6DC;
 }
 
 /* Caption */
 
 .stCaption {
-    color: #718096 !important;
+    color: #788A7B !important;
 }
 
-/* Info messages */
+/* Alert messages */
 
 [data-testid="stAlert"] {
-    background-color: #EDF6FF;
-    border: 1px solid #C5DDF4;
-    color: #24496D;
+    background-color: #EDF3EB;
+    border: 1px solid #D1E0D0;
+    color: #385B43;
     border-radius: 10px;
 }
 
@@ -514,8 +570,15 @@ hr {
 .stTextInput input,
 .stTextArea textarea {
     background-color: #FFFFFF;
-    color: #263445;
-    border: 1px solid #C8D7E7;
+    color: #263B32;
+    border: 1px solid #C9D8CA;
+    border-radius: 8px;
+}
+
+/* Chat placeholder */
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #87958A;
 }
 
 /* Scrollbar */
@@ -525,16 +588,26 @@ hr {
 }
 
 ::-webkit-scrollbar-track {
-    background: #F5F8FC;
+    background: #F5F7F2;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #B8CDE0;
+    background: #B6C8B6;
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #1677C8;
+    background: #789B83;
+}
+
+/* Sidebar scrollbar */
+
+[data-testid="stSidebar"] ::-webkit-scrollbar-track {
+    background: #263B32;
+}
+
+[data-testid="stSidebar"] ::-webkit-scrollbar-thumb {
+    background: #718B77;
 }
 
 </style>
@@ -555,21 +628,24 @@ if "messages" not in st.session_state:
 # =====================================================
 
 st.sidebar.markdown("""
-<div style="padding: 10px 0 20px 0;">
-<h2 style="color:#1677C8; margin-bottom:0;">
-📚 PDF Assistant
-</h2>
-<p style="color:#718096; font-size:13px;">
-Your personal document chatbot
-</p>
+<div class="sidebar-brand">
+
+    <div class="logo">📚</div>
+
+    <h2>PDF Assistant</h2>
+
+    <p>Your documents, one conversation away</p>
+
 </div>
 """, unsafe_allow_html=True)
 
 
-st.sidebar.header("Upload Documents")
+st.sidebar.markdown("---")
+
+st.sidebar.subheader("☁️ Upload your PDFs")
 
 uploaded_files = st.sidebar.file_uploader(
-    "Upload PDF files",
+    "Choose one or more PDF files",
     type=["pdf"],
     accept_multiple_files=True
 )
@@ -598,14 +674,17 @@ pdf_paths.sort(key=lambda path: path.name.lower())
 if not pdf_paths:
 
     st.markdown("""
-<div class="hero-card">
-<h2>Welcome to your PDF Assistant 👋</h2>
-<p>
-Upload one or more PDF documents from the sidebar
-to start asking questions and get answers from your files.
-</p>
-</div>
-""", unsafe_allow_html=True)
+    <div class="hero-card">
+
+        <h2>Welcome to your PDF Assistant 👋</h2>
+
+        <p>
+        Upload one or more PDF documents from the sidebar
+        to start asking questions and get answers from your files.
+        </p>
+
+    </div>
+    """, unsafe_allow_html=True)
 
     st.info("Please upload one or more PDF files from the sidebar.")
 
@@ -616,10 +695,14 @@ to start asking questions and get answers from your files.
 #                    FILE SELECTION
 # =====================================================
 
+st.sidebar.markdown("---")
+
+st.sidebar.subheader("📁 Your Documents")
+
 file_names = [pdf.name for pdf in pdf_paths]
 
 selected_file = st.sidebar.selectbox(
-    "Select document",
+    "Choose a document",
     ["All documents"] + file_names
 )
 
@@ -776,11 +859,14 @@ if st.sidebar.button(
 
 st.markdown("""
 <div class="hero-card">
-<h2>📚 Multiple PDF RAG Chatbot</h2>
-<p>
-Ask questions from your uploaded PDF documents.
-Get context-based answers with document references and page numbers.
-</p>
+
+    <h2>Welcome to your Smart PDF Assistant ✨</h2>
+
+    <p>
+    Ask questions, explore your documents, and get
+    accurate answers with source references and page numbers.
+    </p>
+
 </div>
 """, unsafe_allow_html=True)
 
@@ -805,7 +891,7 @@ for message in st.session_state.messages:
 # =====================================================
 
 question = st.chat_input(
-    "Ask anything about your uploaded PDFs..."
+    "Ask anything about your PDFs..."
 )
 
 
