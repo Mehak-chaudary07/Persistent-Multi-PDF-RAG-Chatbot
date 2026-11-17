@@ -103,15 +103,8 @@ def create_vector_store(chunks): #here chucks value from chunks = split_pages(pa
         embedding_function=embeddings,
         persist_directory=str(DB_FOLDER)   #persist directory basiccaly uuid is used for create new collection on every refresh
     )
-    if chunks:
-    try:
-        vector_store.add_documents(chunks)
-
-    except Exception as e:
-        print("EMBEDDING ERROR:", repr(e))
-        st.error("Error occurred while generating embeddings.")
-        st.exception(e)
-        raise
+    vector_store.add_documents(chunks)
+    return vector_store
 
 def load_vector_store(): #Load or connect to the existing persistent Chroma vector store.
     vector_store = Chroma(
